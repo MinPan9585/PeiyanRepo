@@ -1,23 +1,42 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.EventSystems;
+using UnityEngine.UI;
 
 public class Player : MonoBehaviour
 {
     public Rigidbody rb;
-    public float speed;
+    public float force;
+    Vector3 fireDir;
+    Vector3 finalFireDir;
+    Vector3 hitPos;
+    public Slider slider;
 
     // Update is called once per frame
     void Update()
     {
-        if (Input.GetKey(KeyCode.W))
+        if (Input.GetMouseButtonDown(0))
         {
-            rb.MovePosition(transform.position + new Vector3(0,0,speed * Time.deltaTime));
-        }
+            if (EventSystem.current.IsPointerOverGameObject())
+            {
 
-        if (Input.GetKey(KeyCode.D))
-        {
-            rb.MovePosition(transform.position + new Vector3(speed * Time.deltaTime,0, 0 ));
+            }
+            else
+            {
+                Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+                RaycastHit hit;
+
+                if (Physics.Raycast(ray, out hit))
+                {
+                    hitPos = hit.point;
+                }
+
+                fireDir = transform.position - hitPos;
+                finalFireDir = new Vector3(fireDir.x, slider.value, fireDir.z);
+
+                rb.AddForce(force * finalFireDir, ForceMode.Impulse);
+            }
         }
     }
 }
