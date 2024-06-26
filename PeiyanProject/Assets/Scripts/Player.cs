@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
-using UnityEngine.UI;
+
 
 public class Player : MonoBehaviour
 {
@@ -11,32 +11,41 @@ public class Player : MonoBehaviour
     Vector3 fireDir;
     Vector3 finalFireDir;
     Vector3 hitPos;
-    public Slider slider;
+ 
+//跳跃
+    public float jumpForceMin = 5f; // 最小跳跃力度
+    public float jumpForceMax = 10f; // 最大跳跃力度
+    public float maxJumpTime = 1f; // 最大跳跃时间
+
+    private float jumpForce = 0f;
+    private float jumpTime = 0f;
+    private bool isJumping = false;
+    
 
     // Update is called once per frame
     void Update()
     {
-        if (Input.GetMouseButtonDown(0))
+
+        if (Input.GetKeyDown(KeyCode.Space) && !isJumping) // 检测空格键按下
         {
-            if (EventSystem.current.IsPointerOverGameObject())
-            {
+            isJumping = true;
+            jumpTime = 0f;
+        }
 
-            }
-            else
-            {
-                Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-                RaycastHit hit;
+        if (Input.GetKey(KeyCode.Space) && isJumping) // 检测空格键按住
+        {
+            jumpTime += Time.deltaTime;
+        }
 
-                if (Physics.Raycast(ray, out hit))
-                {
-                    hitPos = hit.point;
-                }
+        if (Input.GetKeyUp(KeyCode.Space) && isJumping) // 检测空格键释放
+        {
+            jumpForce = Mathf.Lerp(jumpForceMin, jumpForceMax, jumpTime / maxJumpTime);
+            GetComponent<Rigidbody>().AddForce(Vector3.up * jumpForce, ForceMode.Impulse);
 
-                fireDir = transform.position - hitPos;
-                finalFireDir = new Vector3(fireDir.x, slider.value, fireDir.z);
-
-                rb.AddForce(force * finalFireDir, ForceMode.Impulse);
-            }
+            isJumping = false;
         }
     }
 }
+    
+
+
