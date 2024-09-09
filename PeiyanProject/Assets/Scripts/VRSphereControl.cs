@@ -9,13 +9,20 @@ public class VRSphereControl : MonoBehaviour
 
     bool isJumping;
     float jumpTime;
-    float maxJumpTime;
+    float maxJumpTime = 5;
     float jumpForce;
-    float jumpForceMin = 2;
-    float jumpForceMax = 9;
+    float horizontalForce;
+    float horizontalForceMin = 2;
+    float horizontalForceMax = 9;
+
+    public float heightMin = 0.5f;
+    public float heightMax = 2.0f;
+    float rightHandHeight;
+    public Transform rightHand;
 
     void Update()
     {
+        rightHandHeight = rightHand.position.y;
         float gripValue = pinchAction.action.ReadValue<float>();
 
         if (gripValue >= 0.1f && !isJumping)
@@ -31,8 +38,12 @@ public class VRSphereControl : MonoBehaviour
 
         if (gripValue <= 0.1f && isJumping)
         {
-            jumpForce = Mathf.Lerp(jumpForceMin, jumpForceMax, jumpTime / maxJumpTime);
-            GetComponent<Rigidbody>().AddForce(Vector3.up * jumpForce + Camera.main.transform.forward, ForceMode.Impulse);
+            jumpForce = Mathf.Lerp(heightMin, heightMax, rightHandHeight / heightMax);
+
+            horizontalForce = Mathf.Lerp(horizontalForceMin, horizontalForceMax, jumpTime / horizontalForceMax);
+
+
+            GetComponent<Rigidbody>().AddForce(Vector3.up * jumpForce + horizontalForce * rightHand.forward, ForceMode.Impulse);
 
             isJumping = false;
         }
