@@ -10,6 +10,9 @@ public class NewBehaviourScript : MonoBehaviour
 
     private Image energyBarImage;
     private float currentJumpTime = 0f;
+
+    public VRSphereControl sphere;
+
     void Start()
     {
         energyBarImage = GetComponent<Image>();
