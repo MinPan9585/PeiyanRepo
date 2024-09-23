@@ -4,8 +4,9 @@ using UnityEngine;
 using UnityEngine.UI;
 public class NewBehaviourScript : MonoBehaviour
 {
-    public float maxJumpTime = 1f; // 最大跳跃时间
-    public float maxEnergyBarWidth = 200f; // 能量条的最大宽度
+    
+    public float maxJumpTime; // 最大跳跃时间
+    public float maxEnergyBarWidth ; // 能量条的最大宽度
 
     private Image energyBarImage;
     private float currentJumpTime = 0f;
@@ -18,7 +19,7 @@ public class NewBehaviourScript : MonoBehaviour
     // Update is called once per frame
     private void Update()
     {
-        if (Input.GetKey(KeyCode.Space))
+       // if ( ) ;
         {
             currentJumpTime += Time.deltaTime;
 
@@ -31,7 +32,7 @@ public class NewBehaviourScript : MonoBehaviour
             energyBarImage.rectTransform.sizeDelta = new Vector2(energyBarWidth, energyBarImage.rectTransform.sizeDelta.y);
         }
 
-        if (Input.GetKeyUp(KeyCode.Space))
+        //if (  ) ;
         {
             currentJumpTime = 0f;
             energyBarImage.fillAmount = 0f;

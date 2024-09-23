@@ -6,15 +6,15 @@ using UnityEngine.InputSystem;
 public class VRSphereControl : MonoBehaviour
 {
     public InputActionProperty pinchAction;
-
-    public float force;
+    public float force1;
+    public float force2;
     bool isJumping;
     float jumpTime;
-    float maxJumpTime = 5;
+    public float maxJumpTime;
     float jumpForce;
     float horizontalForce;
-    float horizontalForceMin = 2;
-    float horizontalForceMax = 9;
+    public float horizontalForceMin ;
+    public float horizontalForceMax ;
 
 
     public float heightMin ;
@@ -40,14 +40,15 @@ public class VRSphereControl : MonoBehaviour
 
         if (gripValue <= 0.1f && isJumping)
         {
+
+            jumpForce = Mathf.Lerp(0, 1, (rightHandHeight - heightMin) / (heightMax - heightMin)) * force1;
+            Debug.Log(jumpForce);
             
-            
-            jumpForce = Mathf.Lerp(heightMin, heightMax, rightHandHeight / heightMax)*(rightHandHeight / heightMin);
 
-            horizontalForce = Mathf.Lerp(horizontalForceMin, horizontalForceMax, jumpTime / horizontalForceMax) * force;
+            horizontalForce = Mathf.Lerp(horizontalForceMin, horizontalForceMax, jumpTime / horizontalForceMax) * force2;
 
-
-            GetComponent<Rigidbody>().AddForce(Vector3.up * jumpForce + horizontalForce * rightHand.forward, ForceMode.Impulse);
+            Debug.Log(horizontalForce);
+            GetComponent<Rigidbody>().AddForce(Vector3.up * jumpForce + horizontalForce * new Vector3(rightHand.forward.x,0, rightHand.forward.z), ForceMode.Impulse);
 
             isJumping = false;
         }
