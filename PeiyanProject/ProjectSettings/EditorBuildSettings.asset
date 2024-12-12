@@ -5,13 +5,13 @@ EditorBuildSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 2
   m_Scenes:
-  - enabled: 0
-    path: Assets/Scenes/vr.unity
-    guid: 47252dce3c9d70242be34140604ac8e1
+  - enabled: 1
+    path: Assets/Scenes/LevelProto0909.unity
+    guid: e50f301b2cfff964cafe54e02b07e581
   m_configObjects:
     Unity.XR.Oculus.Settings: {fileID: 11400000, guid: 46aa3acd34db712499b98c2a7dfeff79,
       type: 2}
-    Unity.XR.PICO.LivePreview.Settings: {fileID: 11400000, guid: 9fe3b6dd8dea45d4988db03ff699d123,
+    Unity.XR.PICO.LivePreview.Settings: {fileID: 11400000, guid: a1783ecd191285042a6b2af67807d6ed,
       type: 2}
     Unity.XR.PXR.Settings: {fileID: 11400000, guid: 2c8b638e60ad432449e8b04c1f675981,
       type: 2}
