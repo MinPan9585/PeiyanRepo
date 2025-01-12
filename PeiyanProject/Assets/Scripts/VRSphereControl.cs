@@ -26,6 +26,7 @@ public class VRSphereControl : MonoBehaviour
     public Image energyBarImage;
 
     public Transform arrow;
+    public Transform chara;
 
     void Update()
     {
@@ -64,6 +65,7 @@ public class VRSphereControl : MonoBehaviour
             //Debug.Log(horizontalForce);
             GetComponent<Rigidbody>().AddForce(Vector3.up * jumpForce + horizontalForce * new Vector3(rightHand.forward.x,0, rightHand.forward.z), ForceMode.Impulse);
             arrow.forward = Vector3.up * jumpForce + horizontalForce * new Vector3(rightHand.forward.x, 0, rightHand.forward.z);
+            chara.forward = Vector3.up * jumpForce + horizontalForce * new Vector3(rightHand.forward.x, 0, rightHand.forward.z);
 
             jumpTime = 0f;
             isJumping = false;
@@ -71,26 +73,3 @@ public class VRSphereControl : MonoBehaviour
     }
 }
 
-/*假设这些变量已经在你的类中定义好了  
-float baseForce = 10f; // 基础力  
-float horizontalForceMax = 50f; // 水平力的最大值  
-float gripValue = ...; // 从某处获取的握持值，范围可能是0到1  
-bool isJumping = ...; // 从某处获取的跳跃状态  
-
-// 计算水平力  
-if (isJumping)
-{
-    // 使用gripValue来缩放基础力，但不超过horizontalForceMax  
-    float scaledForce = Mathf.Clamp(gripValue * (horizontalForceMax - baseForce) + baseForce, baseForce, horizontalForceMax);
-    // 如果需要，还可以乘以一个额外的力系数  
-    float finalForce = scaledForce * someForceMultiplier; // someForceMultiplier是另一个可能存在的力系数  
-
-    // 将计算出的力赋值给horizontalForce（假设它已经在你的类中定义）  
-    horizontalForce = finalForce;
-}
-else
-{
-    // 如果不是跳跃状态，可以将horizontalForce设置为0或其他默认值  
-    horizontalForce = 0f;
-}
-*/
