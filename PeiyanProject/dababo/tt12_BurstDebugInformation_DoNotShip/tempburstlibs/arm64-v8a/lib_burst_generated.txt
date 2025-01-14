@@ -24,6 +24,7 @@ Library: D:\1-100\PeiyanRepo\PeiyanProject\Temp\BurstOutput\tempburstlibs\arm64-
 --assembly-defines=Unity.RenderPipeline.Universal.ShaderLibrary;
 --assembly-defines=Unity.RenderPipelines.Core.Runtime;
 --assembly-defines=Unity.RenderPipelines.Universal.Runtime;
+--assembly-defines=Unity.TextMeshPro;
 --assembly-defines=Unity.XR.CoreUtils;
 --assembly-defines=Unity.XR.Interaction.Toolkit;
 --assembly-defines=Unity.XR.Interaction.Toolkit.Samples.StarterAssets;
@@ -125,6 +126,7 @@ Library: D:\1-100\PeiyanRepo\PeiyanProject\Temp\BurstOutput\tempburstlibs\arm64-
 --assembly-defines=Unity.RenderPipeline.Universal.ShaderLibrary;
 --assembly-defines=Unity.RenderPipelines.Core.Runtime;
 --assembly-defines=Unity.RenderPipelines.Universal.Runtime;
+--assembly-defines=Unity.TextMeshPro;
 --assembly-defines=Unity.XR.CoreUtils;
 --assembly-defines=Unity.XR.Interaction.Toolkit;
 --assembly-defines=Unity.XR.Interaction.Toolkit.Samples.StarterAssets;

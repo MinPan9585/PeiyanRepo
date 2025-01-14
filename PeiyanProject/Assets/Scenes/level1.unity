@@ -14678,7 +14678,6 @@ GameObject:
   - component: {fileID: 1280540809}
   - component: {fileID: 1280540808}
   - component: {fileID: 1280540807}
-  - component: {fileID: 1280540806}
   m_Layer: 0
   m_Name: body (1)
   m_TagString: Untagged
@@ -14686,40 +14685,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &1280540806
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1280540805}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: cd1dff3bc5cd36a45a3791b81d9b0f74, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  pinchAction:
-    m_UseReference: 1
-    m_Action:
-      m_Name: Pinch
-      m_Type: 0
-      m_ExpectedControlType: 
-      m_Id: 6ac61887-f524-454a-89ef-def6973e9da3
-      m_Processors: 
-      m_Interactions: 
-      m_SingletonActionBindings: []
-      m_Flags: 0
-    m_Reference: {fileID: 7904272356298805229, guid: c348712bda248c246b8c49b3db54643f,
-      type: 3}
-  force1: 1000
-  force2: 10
-  maxJumpTime: 5
-  horizontalForceMin: 0
-  horizontalForceMax: 10
-  heightMin: 1
-  heightMax: 2
-  rightHand: {fileID: 0}
-  arrow: {fileID: 254269577}
 --- !u!114 &1280540807
 MonoBehaviour:
   m_ObjectHideFlags: 0
