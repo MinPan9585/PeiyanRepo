@@ -6,70 +6,148 @@ using UnityEngine.UI;
 
 public class VRSphereControl : MonoBehaviour
 {
-    public InputActionProperty pinchAction;
-    public float force1;
-    public float force2;
-    bool isJumping;
-    float jumpTime;
-    public float maxJumpTime;
-    float jumpForce;
-    float horizontalForce;
-    public float horizontalForceMin ;
-    public float horizontalForceMax ;
-
-    public float heightMin ;
-    public float heightMax ;
-    float rightHandHeight;
+    public InputActionProperty triggerAction;
+    public float maxJumpHeight = 5f;
+    public float maxJumpDistance = 10f;
+    public float maxChargeTime = 2f;
     public Transform rightHand;
-
-    private float gripValue;
-    public Image energyBarImage;
-
-    public Transform arrow;
     public Transform chara;
+   
+    public Image energyBarImage;
+    public LineRenderer trajectoryLine;
+    public int trajectoryPoints = 20;
+    public float gravity = -9.81f;
+    public float trajectoryLineWidth = 0.1f;
+
+    // 喷射烟雾特效 GameObject 引用
+    public GameObject jumpEffect;
+    // 爆炸特效预制体
+    public GameObject explosionEffectPrefab;
+
+    // 喷射烟雾特效持续时间
+    public float effectDuration = 1f;
+    // 爆炸特效持续时间
+    public float explosionDuration = 1f;
+
+    private float chargeTime;
+    private bool isCharging;
+    private Vector3 jumpDirection;
+
+    void Start()
+    {
+        // 游戏开始时禁用喷射烟雾特效
+        if (jumpEffect != null)
+        {
+            jumpEffect.SetActive(false);
+        }
+    }
 
     void Update()
     {
-        rightHandHeight = rightHand.position.y;
-        gripValue = pinchAction.action.ReadValue<float>();
-        arrow.forward = new Vector3(rightHand.forward.x, 0, rightHand.forward.z);
+        float triggerValue = triggerAction.action.ReadValue<float>();
 
-
-        if (gripValue >= 0.1f && !isJumping)
+        if (triggerValue > 0.1f && !isCharging)
         {
-            isJumping = true;
-            jumpTime = 0f;
+            chargeTime = 0f;
+            isCharging = true;
         }
 
-        if (gripValue >= 0.1f && isJumping)
+        if (isCharging)
         {
-            jumpTime += Time.deltaTime;
-            float fillAmount = Mathf.Clamp01(jumpTime / maxJumpTime);
-            energyBarImage.fillAmount = fillAmount;
-            horizontalForce = Mathf.Lerp(horizontalForceMin, horizontalForceMax, jumpTime / horizontalForceMax) * force2;
-            jumpForce = Mathf.Lerp(0, 1, (rightHandHeight - heightMin) / (heightMax - heightMin)) * force1;
-            arrow.forward = Vector3.up * jumpForce + horizontalForce * new Vector3(rightHand.forward.x, 0, rightHand.forward.z);
+            chargeTime += Time.deltaTime;
+            chargeTime = Mathf.Clamp(chargeTime, 0f, maxChargeTime);
+
+            energyBarImage.fillAmount = chargeTime / maxChargeTime;
+
+            jumpDirection = rightHand.forward;
+            jumpDirection.y = 0f;
+            jumpDirection.Normalize();
+
+          
+
+            DrawTrajectory();
+
+            if (triggerValue <= 0.1f)
+            {
+                Jump();
+            }
+        }
+        else
+        {
+            trajectoryLine.enabled = false;
+        }
+    }
+
+    void Jump()
+    {
+        float chargeRatio = chargeTime / maxChargeTime;
+        float jumpForce = Mathf.Sqrt(-2f * gravity * maxJumpHeight * chargeRatio);
+        float horizontalForce = Mathf.Sqrt(2f * maxJumpDistance * chargeRatio * -gravity);
+
+        Vector3 jumpVector = jumpDirection * horizontalForce + Vector3.up * jumpForce;
+
+        GetComponent<Rigidbody>().AddForce(jumpVector, ForceMode.Impulse);
+
+        isCharging = false;
+        chargeTime = 0f;
+        energyBarImage.fillAmount = 0f;
+
+        // 激活喷射烟雾特效并调整方向
+        if (jumpEffect != null)
+        {
+            jumpEffect.transform.forward = -jumpVector.normalized;
+            jumpEffect.SetActive(true);
+            StartCoroutine(DisableEffectAfterTime(jumpEffect, effectDuration));
         }
 
-        if (gripValue <= 0.1f && isJumping)
+        // 生成爆炸特效
+        if (explosionEffectPrefab != null)
         {
-            
-            energyBarImage.fillAmount = 0f;
+            GameObject explosionEffectInstance = Instantiate(explosionEffectPrefab, transform.position, Quaternion.identity);
+            StartCoroutine(DestroyEffectAfterTime(explosionEffectInstance, explosionDuration));
+        }
+    }
 
-            jumpForce = Mathf.Lerp(0, 1, (rightHandHeight - heightMin) / (heightMax - heightMin)) * force1;
-            //Debug.Log(jumpForce);
-            
+    void DrawTrajectory()
+    {
+        trajectoryLine.enabled = true;
+        trajectoryLine.startWidth = trajectoryLineWidth;
+        trajectoryLine.endWidth = trajectoryLineWidth;
 
-            horizontalForce = Mathf.Lerp(horizontalForceMin, horizontalForceMax, jumpTime / horizontalForceMax) * force2;
+        float chargeRatio = chargeTime / maxChargeTime;
+        float jumpForce = Mathf.Sqrt(-2f * gravity * maxJumpHeight * chargeRatio);
+        float horizontalForce = Mathf.Sqrt(2f * maxJumpDistance * chargeRatio * -gravity);
 
-            //Debug.Log(horizontalForce);
-            GetComponent<Rigidbody>().AddForce(Vector3.up * jumpForce + horizontalForce * new Vector3(rightHand.forward.x,0, rightHand.forward.z), ForceMode.Impulse);
-            arrow.forward = Vector3.up * jumpForce + horizontalForce * new Vector3(rightHand.forward.x, 0, rightHand.forward.z);
-            chara.forward = Vector3.up * jumpForce + horizontalForce * new Vector3(rightHand.forward.x, 0, rightHand.forward.z);
+        Vector3 initialVelocity = jumpDirection * horizontalForce + Vector3.up * jumpForce;
 
-            jumpTime = 0f;
-            isJumping = false;
+        float totalTime = 2f * jumpForce / -gravity;
+
+        trajectoryLine.positionCount = trajectoryPoints;
+        for (int i = 0; i < trajectoryPoints; i++)
+        {
+            float t = (float)i / (trajectoryPoints - 1) * totalTime;
+            Vector3 position = chara.position + initialVelocity * t + 0.5f * new Vector3(0, gravity, 0) * t * t;
+            trajectoryLine.SetPosition(i, position);
+        }
+    }
+
+    // 协程用于控制喷射烟雾特效显示时间
+    IEnumerator DisableEffectAfterTime(GameObject effect, float time)
+    {
+        yield return new WaitForSeconds(time);
+        if (effect != null)
+        {
+            effect.SetActive(false);
+        }
+    }
+
+    // 协程用于在指定时间后销毁爆炸特效
+    IEnumerator DestroyEffectAfterTime(GameObject effect, float time)
+    {
+        yield return new WaitForSeconds(time);
+        if (effect != null)
+        {
+            Destroy(effect);
         }
     }
 }
-
