@@ -1,48 +1,62 @@
-using System.Collections;
-using System.Collections.Generic;
-
 using UnityEngine;
 
-public class MoveBear : MonoBehaviour
+public class MoveBackAndForth : MonoBehaviour
 {
-    Transform bearTrans;
-    Vector3 bearPos;
-    Vector3 positionOne;
-    Vector3 positionTwo;
+    public Vector3 moveDirection = Vector3.right; // 移动方向，默认向右
+    public float moveDistance = 5.0f; // 移动距离
+    public float moveDuration = 2.0f; // 单程移动时间
+    public float turnSpeed = 90.0f; // 转身速度（每秒旋转角度）
 
-    Vector3 direction;
-    public float speed;
-    bool isHeadingToTwo = true;
+    private Vector3 localStartPosition; // 相对于父物体的初始位置
+    private Vector3 localEndPosition; // 相对于父物体的目标位置
+    private bool movingForward = true; // 是否向前移动
+    private float elapsedTime = 0.0f; // 已经经过的时间
+    private Quaternion targetRotation; // 目标旋转
 
-    private void Start()
+    void Start()
     {
-        bearTrans = transform.GetChild(0);
-        positionOne = transform.GetChild(1).position;
-        positionTwo = transform.GetChild(2).position;
+        // 获取相对于父物体的初始位置
+        localStartPosition = transform.localPosition;
+        // 计算相对于父物体的目标位置
+        localEndPosition = localStartPosition + moveDirection.normalized * moveDistance;
     }
 
-    private void Update()
+    void Update()
     {
-        if (isHeadingToTwo)
+        // 更新已经经过的时间
+        elapsedTime += Time.deltaTime;
+
+        // 根据是否向前移动来计算当前位置
+        if (movingForward)
         {
-            direction = positionTwo - positionOne;
+            // 从初始位置到目标位置插值
+            transform.localPosition = Vector3.Lerp(localStartPosition, localEndPosition, elapsedTime / moveDuration);
         }
         else
         {
-            direction = positionOne - positionTwo;
+            // 从目标位置到初始位置插值
+            transform.localPosition = Vector3.Lerp(localEndPosition, localStartPosition, elapsedTime / moveDuration);
         }
 
-        if(isHeadingToTwo && Vector3.Distance(bearTrans.position, positionTwo) <= 0.1f)
+        // 如果已经经过的时间超过单程时间，反转方向并重置时间
+        if (elapsedTime >= moveDuration)
         {
-            isHeadingToTwo=false;
-            bearTrans.Rotate(new Vector3(0,180f,0));
-        }
-        if(!isHeadingToTwo && Vector3.Distance(bearTrans.position, positionOne) <= 0.1f)
-        {
-            isHeadingToTwo=true;
-            bearTrans.Rotate(new Vector3(0, 180f, 0));
-        }
+            // 反转移动方向
+            movingForward = !movingForward;
+            elapsedTime = 0.0f; // 重置时间
 
-        bearTrans.Translate(direction.normalized * speed * Time.deltaTime, Space.World);
+            // 计算目标旋转
+            if (movingForward)
+            {
+                targetRotation = Quaternion.LookRotation(moveDirection.normalized);
+            }
+            else
+            {
+                targetRotation = Quaternion.LookRotation(-moveDirection.normalized);
+            }
+
+            // 平滑旋转到目标方向
+            transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, turnSpeed * Time.deltaTime);
+        }
     }
 }

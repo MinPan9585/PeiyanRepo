@@ -92,6 +92,13 @@ public class VRSphereControl : MonoBehaviour
         chargeTime = 0f;
         energyBarImage.fillAmount = 0f;
 
+        // 播放跳跃音效
+        AudioSource audioSource = GetComponent<AudioSource>();
+        if (audioSource != null)
+        {
+            audioSource.Play();
+        }
+
         // 激活喷射烟雾特效并调整方向
         if (jumpEffect != null)
         {
