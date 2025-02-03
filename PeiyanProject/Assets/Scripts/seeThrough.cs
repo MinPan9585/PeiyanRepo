@@ -5,18 +5,18 @@ using UnityEngine;
 
 public class seeThrough : MonoBehaviour
 {
-    private void Awake()
+    // 开启透视
+    void Awake()
     {
-        PXR_Boundary.EnableSeeThroughManual(true);
-    }
-    void Start()
-    {
-        
+        PXR_MixedReality.EnableVideoSeeThrough(true);
     }
 
-    // Update is called once per frame
-    void Update()
+    // 应用恢复后，再次开启透视
+    void OnApplicationPause(bool pause)
     {
-        
+        if (!pause)
+        {
+            PXR_MixedReality.EnableVideoSeeThrough(true);
+        }
     }
 }
