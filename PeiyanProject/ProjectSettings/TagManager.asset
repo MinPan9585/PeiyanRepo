@@ -8,6 +8,9 @@ TagManager:
   - Fuel
   - Character
   - yanjiang
+  - FxTemporaire
+  - bomb
+  - Barrel
   layers:
   - Default
   - TransparentFX

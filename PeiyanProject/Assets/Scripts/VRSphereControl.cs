@@ -46,6 +46,9 @@ public class VRSphereControl : MonoBehaviour
     // 新增变量：是否触碰了“yanjiang”标签的物体
     private bool isTouchingYanjiang = false;
     private float yanjiangTimer;
+   //火焰特效
+   public GameObject fire;
+
 
     void Start()
     {
@@ -60,6 +63,7 @@ public class VRSphereControl : MonoBehaviour
 
         // 更新燃料显示
         UpdateFuelText();
+        fire.SetActive(false);
     }
 
     void Update()
@@ -225,12 +229,21 @@ public class VRSphereControl : MonoBehaviour
 
             // 销毁燃料模型
             Destroy(other.gameObject);
-        } 
-        
+        }
+
         // 检查是否碰撞到标签为 "yanjiang" 的物体
         if (other.CompareTag("yanjiang"))
         {
+           fire.SetActive(true);
             isTouchingYanjiang = true; // 开始减少燃料
+        }
+        // 检查是否碰撞到标签为 "Barrel" 的物体（炸药桶）
+        if (other.CompareTag("Barrel"))
+        {
+            // 减少燃料
+            currentFuel -= 10;
+            currentFuel = Mathf.Clamp(currentFuel, 0, maxFuel); // 确保燃料不小于0
+            UpdateFuelText(); // 更新燃料显示
         }
     }
 
@@ -239,6 +252,7 @@ public class VRSphereControl : MonoBehaviour
         // 检查是否离开标签为 "yanjiang" 的物体
         if (other.CompareTag("yanjiang"))
         {
+            fire.SetActive(false);
             isTouchingYanjiang = false; // 停止减少燃料
         }
     }
