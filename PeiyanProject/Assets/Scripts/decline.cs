@@ -4,7 +4,7 @@ public class CylinderController : MonoBehaviour
 {
     private Vector3 originalPosition; // 柱体的初始位置
     public float maxDropDistance = 5f; // 最大下降距离
-    public float dropSpeed = 1f; // 下降速度
+    public float dropSpeed; // 下降速度
     public float recoverySpeed = 0.5f; // 恢复速度
     public GameObject object2; // 需要控制激活状态的物体2
     
@@ -50,7 +50,7 @@ public class CylinderController : MonoBehaviour
         transform.position = originalPosition + new Vector3(0, -currentDropDistance, 0);
     }
 
-    private void OnTriggerEnter(Collider other)
+    private void OnTriggerStay(Collider other)
     {
         if (other.CompareTag("Character"))
         {
