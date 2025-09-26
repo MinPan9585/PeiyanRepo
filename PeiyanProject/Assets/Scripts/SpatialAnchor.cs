@@ -1,103 +1,111 @@
-using System;
 using UnityEngine;
-using UnityEngine.InputSystem;
 using Unity.XR.PXR;
+using UnityEngine.InputSystem; 
 
 public class SpatialAnchor : MonoBehaviour
 {
-    // 用于存储创建的锚点的 Handle
+    [Header("① 要钉住的物体")]
+    public Transform target;
+
+    [Header("② 右手手柄 Transform")]
+    public Transform rightHand;
+
+    [Header("③ A键  InputActionReference")]
+    public InputActionReference aButton;   // 把 .inputactions 里的 A 拖进来
+
     private ulong anchorHandle = 0;
+    private bool following = false;
 
-    // 是否已经创建了锚点
-    private bool isAnchorCreated = false;
+    /*---------- 生命周期 ----------*/
 
-    // 引用 InputAction
-    public InputActionProperty gripAction;
-
-    void Update()
+    private void Start()
     {
-        // 检测是否按下了 Grip 按键
-        float gripValue = gripAction.action.ReadValue<float>();
-
-        if (gripValue > 0.1f && !isAnchorCreated)
-        {
-            // 在物体的当前位置创建锚点
-            CreateAnchorAtCurrentPosition();
-        }
+        CreateAnchorAt(target.position, target.rotation);
     }
 
-    private void CreateAnchorAtCurrentPosition()
+    private void OnEnable()
     {
-        // 获取物体的当前位置和旋转
-        Vector3 position = transform.position;
-        Quaternion rotation = transform.rotation;
-
-        // 调用 Pico SDK 创建锚点
-        PXR_MixedReality.CreateAnchorEntity(position, rotation, out ulong taskId);
-
-        // 监听锚点创建事件
-        PXR_Manager.AnchorEntityCreated += OnAnchorEntityCreated;
-
-        Debug.Log("Anchor creation task started with taskId: " + taskId);
+        // 监听 A 键
+        aButton.action.performed += OnAPressed;
+        PXR_Manager.AnchorEntityCreated += OnCreated;
     }
 
-    private void OnAnchorEntityCreated(PxrEventAnchorEntityCreated result)
+    private void OnDisable()
     {
-        // 检查锚点是否创建成功
-        if (result.result == PxrResult.SUCCESS)
+        aButton.action.performed -= OnAPressed;
+        PXR_Manager.AnchorEntityCreated -= OnCreated;
+    }
+
+    /*---------- A 键回调 ----------*/
+
+    private void OnAPressed(InputAction.CallbackContext _)
+    {
+        if (anchorHandle != 0)
         {
-            anchorHandle = result.anchorHandle;
-            isAnchorCreated = true;
-
-            Debug.Log("Anchor created successfully with handle: " + anchorHandle);
-
-            // 将物体的父级设置为锚点，确保物体跟随锚点移动
-            BindObjectToAnchor(result.anchorHandle);
+            DestroyAnchor();
+            following = true;
         }
         else
         {
-            Debug.LogError("Failed to create anchor: " + result.result);
+            CreateAnchorAt(rightHand.position, rightHand.rotation);
+            following = false;
         }
     }
 
-    private void BindObjectToAnchor(ulong anchorHandle)
+    /*---------- 每帧同步 ----------*/
+
+    private void LateUpdate()
     {
-        // 获取锚点的实时姿态
-        PXR_MixedReality.GetAnchorPose(anchorHandle, out Quaternion anchorRotation, out Vector3 anchorPosition);
-
-        // 将物体的位置和旋转设置为锚点的位置和旋转
-        transform.position = anchorPosition;
-        transform.rotation = anchorRotation;
-
-        // 每帧更新物体的位置和旋转，以确保物体始终跟随锚点
-        StartCoroutine(UpdateObjectPosition(anchorHandle));
-    }
-
-    private System.Collections.IEnumerator UpdateObjectPosition(ulong anchorHandle)
-    {
-        while (isAnchorCreated)
+        if (following && rightHand != null)
         {
-            // 获取锚点的实时姿态
-            PXR_MixedReality.GetAnchorPose(anchorHandle, out Quaternion anchorRotation, out Vector3 anchorPosition);
-
-            // 更新物体的位置和旋转
-            transform.position = anchorPosition;
-            transform.rotation = anchorRotation;
-
-            yield return new WaitForEndOfFrame();
+            target.position = rightHand.position;
+            target.rotation = rightHand.rotation;
+        }
+        else if (anchorHandle != 0)
+        {
+            if (PXR_MixedReality.GetAnchorPose(anchorHandle, out Quaternion rot, out Vector3 pos)
+                == PxrResult.SUCCESS)
+            {
+                target.position = pos;
+                target.rotation = rot;
+            }
         }
     }
 
-    void OnDestroy()
-    {
-        // 取消监听事件
-        PXR_Manager.AnchorEntityCreated -= OnAnchorEntityCreated;
+    /*---------- 锚点创建/销毁 ----------*/
 
-        // 如果创建了锚点，销毁它
-        if (isAnchorCreated)
+    private void CreateAnchorAt(Vector3 pos, Quaternion rot)
+    {
+        ulong taskId;
+        PxrResult result = PXR_MixedReality.CreateAnchorEntity(pos, rot, out taskId);
+        if (result == PxrResult.SUCCESS)
+            Debug.Log($"创建请求已发 taskId={taskId}");
+        else
+            Debug.LogError($"CreateAnchorEntity 失败 {result}");
+    }
+
+    private void DestroyAnchor()
+    {
+        if (anchorHandle == 0) return;
+        if (PXR_MixedReality.DestroyAnchorEntity(anchorHandle) == PxrResult.SUCCESS)
         {
-            PXR_MixedReality.DestroyAnchorEntity(anchorHandle);
-            Debug.Log("Anchor destroyed with handle: " + anchorHandle);
+            Debug.Log($"锚点已销毁 handle={anchorHandle}");
+            anchorHandle = 0;
+        }
+    }
+
+    /*---------- 事件回调 ----------*/
+
+    private void OnCreated(PxrEventAnchorEntityCreated e)
+    {
+        if (e.result == PxrResult.SUCCESS)
+        {
+            anchorHandle = e.anchorHandle;
+            Debug.Log($"锚点创建成功 handle={anchorHandle}");
+        }
+        else
+        {
+            Debug.LogError($"锚点创建失败 result={e.result}");
         }
     }
 }

@@ -39,12 +39,13 @@ public class CylinderController : MonoBehaviour
                
        
         }
-        // 如果角色不在上面，柱体恢复
+        /*如果角色不在上面，柱体恢复
         else
         {
             currentDropDistance -= recoverySpeed * Time.deltaTime;
             currentDropDistance = Mathf.Clamp(currentDropDistance, 0, maxDropDistance);
         }
+        */
 
         // 更新柱体的位置
         transform.position = originalPosition + new Vector3(0, -currentDropDistance, 0);

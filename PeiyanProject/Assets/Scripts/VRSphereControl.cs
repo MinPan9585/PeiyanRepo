@@ -1,4 +1,4 @@
-using System.Collections;
+ï»¿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -7,6 +7,8 @@ using TMPro;
 
 public class VRSphereControl : MonoBehaviour
 {
+
+    [Header("è¾“å…¥ & å‚æ•°")]
     public InputActionProperty triggerAction;
     public float maxJumpHeight = 5f;
     public float maxJumpDistance = 10f;
@@ -14,59 +16,51 @@ public class VRSphereControl : MonoBehaviour
     public Transform rightHand;
     public Transform chara;
 
+    [Header("UI & ç‰¹æ•ˆ")]
     public Image energyBarImage;
-    public LineRenderer trajectoryLine;
+    public LineRenderer worldTrajectoryLine;   // âœ… ä¸–ç•Œç©ºé—´çš„ LineRenderer
     public int trajectoryPoints = 20;
     public float gravity = -9.81f;
     public float trajectoryLineWidth = 0.1f;
-
-    // ÅçÉäÑÌÎíÌØĞ§ GameObject ÒıÓÃ
     public GameObject jumpEffect;
-    // ±¬Õ¨ÌØĞ§Ô¤ÖÆÌå
     public GameObject explosionEffectPrefab;
-
-    // ÅçÉäÑÌÎíÌØĞ§³ÖĞøÊ±¼ä
     public float effectDuration = 1f;
-    // ±¬Õ¨ÌØĞ§³ÖĞøÊ±¼ä
     public float explosionDuration = 1f;
+    public GameObject fire;
 
-    // ĞÂÔöÈ¼ÁÏÏà¹Ø±äÁ¿
-    public int maxFuel = 20; // ×î´óÈ¼ÁÏÁ¿
-    public int currentFuel; // µ±Ç°È¼ÁÏÁ¿
-    public TMP_Text fuelText;   // ÏÔÊ¾È¼ÁÏÁ¿µÄ UI ÎÄ±¾×é¼ş
+    [Header("è¾…åŠ©çº¿ç»˜åˆ¶ç¼©æ”¾ï¼ˆä¸å½±å“çœŸå®è·³è·ƒï¼‰")]
+    public float lineDistanceScale = 1f;   // è¿œåº¦ç¼©æ”¾
+    public float lineHeightScale = 1f;   // é«˜åº¦ç¼©æ”¾
 
-    // ´¥ÅöÒôĞ§
-    public AudioClip touchSoundClip; // ´¥ÅöÈ¼ÁÏµÄÒôĞ§¼ô¼­
-    private AudioSource audioSource; // ´¥ÅöÈ¼ÁÏµÄÒôĞ§Ô´×é¼ş
+    [Header("ç‡ƒæ–™")]
+    public int maxFuel = 20;
+    public int currentFuel;
+    public TMP_Text fuelText;
+    public AudioClip touchSoundClip;
+    private AudioSource audioSource;
 
     private float chargeTime;
     private bool isCharging;
     private Vector3 jumpDirection;
-
-    // ĞÂÔö±äÁ¿£ºÊÇ·ñ´¥ÅöÁË¡°yanjiang¡±±êÇ©µÄÎïÌå
     private bool isTouchingYanjiang = false;
     private float yanjiangTimer;
-   //»ğÑæÌØĞ§
-   public GameObject fire;
 
+    /*---------- ç”Ÿå‘½å‘¨æœŸ ----------*/
 
-    void Start()
+    private void Start()
     {
-        // ³õÊ¼»¯È¼ÁÏ
         currentFuel = maxFuel;
-
-        // ÓÎÏ·¿ªÊ¼Ê±½ûÓÃÅçÉäÑÌÎíÌØĞ§
-        if (jumpEffect != null)
-        {
-            jumpEffect.SetActive(false);
-        }
-
-        // ¸üĞÂÈ¼ÁÏÏÔÊ¾
         UpdateFuelText();
-        fire.SetActive(false);
+
+        if (jumpEffect) jumpEffect.SetActive(false);
+        if (fire) fire.SetActive(false);
+
+        // ä¿åº•ç»™éŸ³é¢‘æº
+        audioSource = GetComponent<AudioSource>();
+        if (!audioSource) audioSource = gameObject.AddComponent<AudioSource>();
     }
 
-    void Update()
+    private void Update()
     {
         float triggerValue = triggerAction.action.ReadValue<float>();
 
@@ -80,14 +74,9 @@ public class VRSphereControl : MonoBehaviour
         {
             chargeTime += Time.deltaTime;
             chargeTime = Mathf.Clamp(chargeTime, 0f, maxChargeTime);
-
             energyBarImage.fillAmount = chargeTime / maxChargeTime;
 
-            jumpDirection = rightHand.forward;
-            jumpDirection.y = 0f;
-            jumpDirection.Normalize();
-
-            DrawTrajectory();
+            DrawTrajectory();          // âœ… ç”»ä¸–ç•Œç©ºé—´è¾…åŠ©çº¿
 
             if (triggerValue <= 0.1f)
             {
@@ -96,164 +85,182 @@ public class VRSphereControl : MonoBehaviour
         }
         else
         {
-            trajectoryLine.enabled = false;
+            worldTrajectoryLine.enabled = false;
         }
+
+        // å²©æµ†å‡ç‡ƒæ–™
         if (isTouchingYanjiang)
         {
             yanjiangTimer += Time.deltaTime;
             if (yanjiangTimer >= 2f)
             {
-                yanjiangTimer = 0f; // ÖØÖÃ¼ÆÊ±Æ÷
-                currentFuel--; // Ã¿2Ãë¼õÉÙ1µãÈ¼ÁÏ
-                currentFuel = Mathf.Clamp(currentFuel, 0, maxFuel); // È·±£È¼ÁÏ²»Ğ¡ÓÚ0
-                UpdateFuelText(); // ¸üĞÂÈ¼ÁÏÏÔÊ¾
+                yanjiangTimer = 0f;
+                currentFuel--;
+                currentFuel = Mathf.Clamp(currentFuel, 0, maxFuel);
+                UpdateFuelText();
             }
         }
-
     }
 
-    void Jump()
+    /*---------- è·³è·ƒ ----------*/
+
+    private void Jump()
     {
-        if (currentFuel <= 0) return; // Èç¹ûÈ¼ÁÏºÄ¾¡£¬Ö±½Ó·µ»Ø
+        if (currentFuel <= 0) return;
 
         float chargeRatio = chargeTime / maxChargeTime;
         float jumpForce = Mathf.Sqrt(-2f * gravity * maxJumpHeight * chargeRatio);
         float horizontalForce = Mathf.Sqrt(2f * maxJumpDistance * chargeRatio * -gravity);
 
-        Vector3 jumpVector = jumpDirection * horizontalForce + Vector3.up * jumpForce;
+        Vector3 jumpDir = rightHand.forward;
+        jumpDir.y = 0f;
+        jumpDir.Normalize();
 
+        Vector3 jumpVector = jumpDir * horizontalForce + Vector3.up * jumpForce;
         GetComponent<Rigidbody>().AddForce(jumpVector, ForceMode.Impulse);
 
         isCharging = false;
         chargeTime = 0f;
         energyBarImage.fillAmount = 0f;
 
-        // ÏûºÄÈ¼ÁÏ
         currentFuel--;
         UpdateFuelText();
 
-        // ²¥·ÅÌøÔ¾ÒôĞ§
-        if (audioSource != null)
+        /*==== å–·æ°”ç‰¹æ•ˆï¼šåªè·Ÿéšï¼Œä¸æ”¹æœå‘ ====*/
+        if (jumpEffect)
         {
-            audioSource.Play();
-        }
+            // 1. ç¡®ä¿ç‰¹æ•ˆè·Ÿç€è§’è‰²ï¼ˆä½ç½®+æ—‹è½¬ï¼‰
+            jumpEffect.transform.SetParent(chara, false);   // æˆä¸ºå­ç‰©ä½“ï¼Œæœ¬åœ°Poseä¿æŒ
+            jumpEffect.transform.position = chara.position; // å¼ºåˆ¶å¯¹é½å½“å‰è„šåº•
+            jumpEffect.transform.rotation = chara.rotation; // ä»…åŒæ­¥è§’è‰²æœå‘
 
-        // ¼¤»îÅçÉäÑÌÎíÌØĞ§²¢µ÷Õû·½Ïò
-        if (jumpEffect != null)
-        {
-            jumpEffect.transform.forward = -jumpVector.normalized;
+            // 2. å¼€å–·
             jumpEffect.SetActive(true);
             StartCoroutine(DisableEffectAfterTime(jumpEffect, effectDuration));
         }
-
-        // Éú³É±¬Õ¨ÌØĞ§
-        if (explosionEffectPrefab != null)
+        if (explosionEffectPrefab)
         {
-            GameObject explosionEffectInstance = Instantiate(explosionEffectPrefab, transform.position, Quaternion.identity);
-            StartCoroutine(DestroyEffectAfterTime(explosionEffectInstance, explosionDuration));
+            GameObject fx = Instantiate(explosionEffectPrefab, transform.position, Quaternion.identity);
+            Destroy(fx, explosionDuration);
         }
     }
 
-    void DrawTrajectory()
+    /*---------- ç”»è½¨è¿¹ ----------*/
+
+    private void DrawTrajectory()
     {
-        trajectoryLine.enabled = true;
-        trajectoryLine.startWidth = trajectoryLineWidth;
-        trajectoryLine.endWidth = trajectoryLineWidth;
+        // 1. å¯ç”¨ä¸–ç•Œç©ºé—´ç»˜åˆ¶ï¼ˆå…³é”®ä¿®æ­£ï¼‰
+        worldTrajectoryLine.useWorldSpace = true;
+        worldTrajectoryLine.enabled = true;
+        worldTrajectoryLine.startWidth = trajectoryLineWidth;
+        worldTrajectoryLine.endWidth = trajectoryLineWidth;
 
-    
+        // 2. èµ·ç‚¹ï¼šè§’è‰²ä½ç½®ï¼ˆä¸–ç•Œç©ºé—´ï¼‰
+        Vector3 startWorld = chara.position;
 
+        // 3. è®¡ç®—è·³è·ƒæ–¹å‘ï¼ˆæ°´å¹³æ–¹å‘ï¼‰
+        Vector3 dirWorld = rightHand.forward;
+        dirWorld.y = 0f;
+        dirWorld.Normalize();
+        if (dirWorld.sqrMagnitude < 0.1f) // é¿å…æ–¹å‘ä¸ºé›¶
+        {
+            dirWorld = chara.forward;
+            dirWorld.y = 0f;
+            dirWorld.Normalize();
+        }
+
+        // 4. è®¡ç®—åˆé€Ÿåº¦ï¼ˆä¸ Jump æ–¹æ³•ä¿æŒä¸€è‡´é€»è¾‘ï¼Œå¸¦ç¼©æ”¾ï¼‰
         float chargeRatio = chargeTime / maxChargeTime;
-        float jumpForce = Mathf.Sqrt(-2f * gravity * maxJumpHeight * chargeRatio);
-        float horizontalForce = Mathf.Sqrt(2f * maxJumpDistance * chargeRatio * -gravity);
+        float jumpForce = Mathf.Sqrt(-2f * gravity * maxJumpHeight * chargeRatio); // å‚ç›´é€Ÿåº¦
+        float horizontalForce = Mathf.Sqrt(2f * maxJumpDistance * chargeRatio * -gravity); // æ°´å¹³é€Ÿåº¦
+        Vector3 initialVelWorld = dirWorld * horizontalForce + Vector3.up * jumpForce;
 
-        Vector3 initialVelocity = jumpDirection * horizontalForce + Vector3.up * jumpForce;
+        // åº”ç”¨è¾…åŠ©çº¿ç¼©æ”¾ï¼ˆåªå½±å“æ˜¾ç¤ºï¼Œä¸å½±å“å®é™…è·³è·ƒï¼‰
+        initialVelWorld.x *= lineDistanceScale;
+        initialVelWorld.z *= lineDistanceScale;
+        initialVelWorld.y *= lineHeightScale;
 
-        float totalTime = 2f * jumpForce / -gravity;
+        // 5. è®¡ç®—é£è¡Œæ€»æ—¶é—´ï¼ˆè½¨è¿¹è½åœ°æ—¶é—´ï¼‰
+        float totalTime = 0;
+        if (Physics.gravity.y != 0)
+        {
+            // è§£äºŒæ¬¡æ–¹ç¨‹ï¼š0 = startY + vY*t + 0.5*g*tÂ²
+            float discriminant = initialVelWorld.y * initialVelWorld.y - 2 * Physics.gravity.y * startWorld.y;
+            if (discriminant >= 0)
+            {
+                float t1 = (-initialVelWorld.y + Mathf.Sqrt(discriminant)) / Physics.gravity.y;
+                float t2 = (-initialVelWorld.y - Mathf.Sqrt(discriminant)) / Physics.gravity.y;
+                totalTime = Mathf.Max(t1, t2); // å–è½åœ°æ—¶é—´ï¼ˆæ­£æ•°ï¼‰
+            }
+        }
+        if (totalTime <= 0) totalTime = 2f; // ä¿åº•æ—¶é—´ï¼Œé¿å…æ— è½¨è¿¹
 
-        trajectoryLine.positionCount = trajectoryPoints;
+        // 6. ç”Ÿæˆè½¨è¿¹ç‚¹ï¼ˆä¸–ç•Œç©ºé—´ç›´æ¥èµ‹å€¼ï¼‰
+        worldTrajectoryLine.positionCount = trajectoryPoints;
         for (int i = 0; i < trajectoryPoints; i++)
         {
             float t = (float)i / (trajectoryPoints - 1) * totalTime;
-            Vector3 position = chara.position + initialVelocity * t + 0.5f * new Vector3(0, gravity, 0) * t * t;
-            trajectoryLine.SetPosition(i, position);
+            // è®¡ç®—ä¸–ç•Œç©ºé—´ä½ç½®ï¼ˆè¿åŠ¨å­¦å…¬å¼ï¼‰
+            Vector3 worldPos = startWorld
+                             + initialVelWorld * t
+                             + 0.5f * Physics.gravity * t * t;
+            worldTrajectoryLine.SetPosition(i, worldPos);
+
+            // Debugçº¿ï¼ˆéªŒè¯è½¨è¿¹ï¼‰
+            if (i > 0)
+            {
+                Vector3 prevWorld = startWorld
+                                 + initialVelWorld * ((float)(i - 1) / (trajectoryPoints - 1) * totalTime)
+                                 + 0.5f * Physics.gravity * Mathf.Pow((float)(i - 1) / (trajectoryPoints - 1) * totalTime, 2);
+                Debug.DrawLine(prevWorld, worldPos, Color.red, 0.02f);
+            }
         }
     }
+    /*---------- ç‡ƒæ–™ & ç¢°æ’ ----------*/
 
-    // Ğ­³ÌÓÃÓÚ¿ØÖÆÅçÉäÑÌÎíÌØĞ§ÏÔÊ¾Ê±¼ä
-    IEnumerator DisableEffectAfterTime(GameObject effect, float time)
-    {
-        yield return new WaitForSeconds(time);
-        if (effect != null)
-        {
-            effect.SetActive(false);
-        }
-    }
-
-    // Ğ­³ÌÓÃÓÚÔÚÖ¸¶¨Ê±¼äºóÏú»Ù±¬Õ¨ÌØĞ§
-    IEnumerator DestroyEffectAfterTime(GameObject effect, float time)
-    {
-        yield return new WaitForSeconds(time);
-        if (effect != null)
-        {
-            Destroy(effect);
-        }
-    }
-
-    // ¸üĞÂÈ¼ÁÏÏÔÊ¾
-    void UpdateFuelText()
-    {
-        if (fuelText != null)
-        {
-            fuelText.text = "Fuel: " + currentFuel.ToString();
-        }
-    }
-
-    // Åö×²¼ì²â
     private void OnTriggerEnter(Collider other)
     {
-        // ¼ì²éÊÇ·ñÅö×²µ½±êÇ©Îª "Fuel" µÄÎïÌå
         if (other.CompareTag("Fuel"))
         {
-            // Ôö¼ÓÈ¼ÁÏ
             currentFuel += 20;
-            currentFuel = Mathf.Clamp(currentFuel, 0, maxFuel); // È·±£È¼ÁÏ²»³¬¹ı×î´óÖµ
-
-            // ¸üĞÂÈ¼ÁÏÏÔÊ¾
+            currentFuel = Mathf.Clamp(currentFuel, 0, maxFuel);
             UpdateFuelText();
-
-            // ²¥·Å´¥ÅöÒôĞ§
-            if (audioSource != null && touchSoundClip != null)
-            {
-                audioSource.PlayOneShot(touchSoundClip);
-            }
-
-            // Ïú»ÙÈ¼ÁÏÄ£ĞÍ
+            if (audioSource && touchSoundClip) audioSource.PlayOneShot(touchSoundClip);
             Destroy(other.gameObject);
         }
-
-        // ¼ì²éÊÇ·ñÅö×²µ½±êÇ©Îª "yanjiang" µÄÎïÌå
         if (other.CompareTag("yanjiang"))
         {
-           fire.SetActive(true);
-            isTouchingYanjiang = true; // ¿ªÊ¼¼õÉÙÈ¼ÁÏ
+            fire.SetActive(true);
+            isTouchingYanjiang = true;
+            yanjiangTimer = 0f;
         }
-        // ¼ì²éÊÇ·ñÅö×²µ½±êÇ©Îª "Barrel" µÄÎïÌå£¨Õ¨Ò©Í°£©
         if (other.CompareTag("Barrel"))
         {
-            // ¼õÉÙÈ¼ÁÏ
             currentFuel -= 10;
-            currentFuel = Mathf.Clamp(currentFuel, 0, maxFuel); // È·±£È¼ÁÏ²»Ğ¡ÓÚ0
-            UpdateFuelText(); // ¸üĞÂÈ¼ÁÏÏÔÊ¾
+            currentFuel = Mathf.Clamp(currentFuel, 0, maxFuel);
+            UpdateFuelText();
         }
     }
 
     private void OnTriggerExit(Collider other)
     {
-        // ¼ì²éÊÇ·ñÀë¿ª±êÇ©Îª "yanjiang" µÄÎïÌå
         if (other.CompareTag("yanjiang"))
         {
             fire.SetActive(false);
-            isTouchingYanjiang = false; // Í£Ö¹¼õÉÙÈ¼ÁÏ
+            isTouchingYanjiang = false;
         }
+    }
+
+    /*---------- UI & å·¥å…· ----------*/
+
+    private void UpdateFuelText()
+    {
+        if (fuelText) fuelText.text = "Fuel: " + currentFuel.ToString();
+    }
+
+    private IEnumerator DisableEffectAfterTime(GameObject effect, float time)
+    {
+        yield return new WaitForSeconds(time);
+        if (effect) effect.SetActive(false);
     }
 }
