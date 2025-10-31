@@ -242,7 +242,7 @@
       "url": "https://packages.unity.cn"
     },
     "com.unity.xr.picoxr": {
-      "version": "file:D:/1-100/dowlods/PICO-Unity-Integration-SDK-2.5.0/PICO-Unity-Integration-SDK-2.5.0",
+      "version": "file:../PICO-Unity-Integration-SDK-release_2.5.0",
       "depth": 0,
       "source": "local",
       "dependencies": {
